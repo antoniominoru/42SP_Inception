@@ -6,12 +6,12 @@ while ! mysqladmin ping -hlocalhost --silent; do
 	sleep 1
 done
 
-if ! mysql -e "USE $WP_DATABASE_ENV;";
+if ! mysql -e "USE $WP_DATABASE;";
 
 then
-	mysql -e "CREATE DATABASE $WP_DATABASE_ENV;"
-	mysql -e "CREATE USER '$WP_ADMIN_USER_ENV'@'%' IDENTIFY BY '$WP_ADMIN_PWD_ENV';"
-	mysql -e "GRANT ALL PRIVILEGES ON $WP_DATABASE.* TO '$WP_ADMIN_USER_ENV'@'%';"
+	mysql -e "CREATE DATABASE $WP_DATABASE;"
+	mysql -e "CREATE USER '$WP_ADMIN_USER'@'%' IDENTIFY BY '$WP_ADMIN_PWD';"
+	mysql -e "GRANT ALL PRIVILEGES ON $WP_DATABASE.* TO '$WP_ADMIN_USER'@'%';"
 	mysql -e "FLUSH PRIVILEGES;"
 fi
 
