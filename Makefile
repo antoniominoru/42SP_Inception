@@ -6,7 +6,7 @@
 #    By: aminoru- <aminoru-@student.42sp.org.br>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/22 15:23:25 by aminoru-          #+#    #+#              #
-#    Updated: 2024/02/22 15:23:42 by aminoru-         ###   ########.fr        #
+#    Updated: 2024/02/22 16:53:34 by aminoru-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,6 +31,7 @@ volumes:
 prepare:
 	apt -y update && apt -y upgrade
 	apt -y install docker-compose-plugin
+	apt -y autoremove
 
 clean: down
 	docker system prune --volumes -af
