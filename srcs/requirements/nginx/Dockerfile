@@ -1,18 +1,18 @@
-FROM debian:bullseye
+FROM  debian:buster
 
-RUN apt update -y && apt upgrade -y && \
-		apt install nginx -y && apt install openssl -y
+ARG DOMAIN_NAME
+ARG CERTS_KEY
+ARG CERTS_CRT
 
-RUN mkdir -p /etc/nginx/ssl && \
-		openssl req -batch -x509 -sha256 -nodes -newkey rsa:2048 -days 365 \
-		-keyout /etc/nginx/ssl/inception.key \
-		-out /etc/nginx/ssl/inception.crt \
-		-subj "/C=BR/ST=SP/L=SP/O=42sp/CN=$DOMAIN_NAME/UID=aminoru"
+RUN apt update && apt install nginx openssl bash -y \
+	&& mkdir /etc/nginx/ssl \
+	&& openssl req -x509 -nodes -days 365 -newkey rsa:2048\
+    -subj "/C=CA/ST=QC/O=42SP/CN=aminoru-.42.fr" \
+    -keyout ${CERTS_KEY} \
+    -out ${CERTS_CRT}
 
-COPY ./conf/nginx.conf /etc/nginx/conf.d
-
-RUN chmod 755 /var/www/html
-RUN chown -R www-data:www-data /var/www/html
+COPY ./tools/initnginx.sh initnginx.sh
+RUN chmod +x initnginx.sh && bash initnginx.sh && rm -f initnginx.sh
 
 EXPOSE 443
 

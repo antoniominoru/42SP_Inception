@@ -1,29 +1,24 @@
-FROM debian:bullseye
+FROM debian:buster
 
-ENV DEBIAN_FRONTEND=noninteractive
+ARG MYSQL_DATABASE
+ARG MYSQL_USER
+ARG MYSQL_PASSWORD
+ARG WP_HOST
 
-RUN apt update && apt upgrade -y && \
-	apt install -y php7.4 php7.4-fpm php7.4-cli \
-	php7.4-curl php7.4-mysql php7.4-mbstring php7.4-xml php7.4-gd \
-	wget mariadb-client nano
+RUN apt update && apt install -y php7.3-fpm php7.3-mysql mariadb-client wget bash\
+	&& mkdir -p /var/run/php && chmod 777 /var/run/php \
+	&& mkdir -p /var/www/html && chmod 777 /var/www/html \
+	&& wget https://br.wordpress.org/wordpress-6.1.1-pt_BR.tar.gz \
+	&& tar xzf wordpress-6.1.1-pt_BR.tar.gz \
+    && mv wordpress/* /var/www/html \
+    && rm wordpress-6.1.1-pt_BR.tar.gz && rm -rf wordpress \
+	&& sed -i "s/listen = \/run\/php\/php7.3-fpm.sock/listen = 9000/" "/etc/php/7.3/fpm/pool.d/www.conf" \
+	&& touch /run/php/php7.3-fpm.pid
 
-RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-	--output-document=/usr/local/bin/wp \
-	&& chmod -x /usr/local/bin/wp
-
-RUN mkdir -p /run/php /var/www/html && \
-	chmod -R 755 /var/www/html
-
-COPY ./conf/www.conf /etc/php/7.4/fpm/pool.d/www.conf
-
-RUN chmod 755 /etc/php/7.4/fpm/pool.d/www.conf
-
-WORKDIR /var/www/html
-
-COPY ./tools/entrypoint.sh /usr/local/bin/
-
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY ./conf/wp-config.php /var/www/html/wp-config.php
+COPY ./tools/initwordpress.sh initwordpress.sh
+RUN chmod +x initwordpress.sh && bash initwordpress.sh && rm -f initwordpress.sh
 
 EXPOSE 9000
 
-ENTRYPOINT ["entrypoint.sh"]
+CMD ["php-fpm7.3",  "-F"]

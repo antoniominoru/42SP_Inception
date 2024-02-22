@@ -2,65 +2,79 @@ version: '3.8'
 
 services:
   mariadb:
-    image: mariadb
-    init: true
     container_name: mariadb
-    build:
+    image: mariadb
+    build: 
       context: ./requirements/mariadb
-    env_file:
-      - .env
+      dockerfile: Dockerfile
+      args:
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    restart: always
     ports:
       - 3306:3306
+    volumes:
+      - mariadb-volume:/var/lib/mysql
     networks:
       - inception
-    volumes:
-      - mariadb:/var/lib/mysql
-
-  wordpress:
-    image: wordpress
-    init: true
-    container_name: wordpress
-    build:
-      context: ./requirements/wordpress
-    env_file:
-      - .env
-    networks:
-      - inception
-    volumes:
-      - wordpress: /var/www/html
-    depends_on:
-      - mariadb
-
   nginx:
-    image: nginx
-    init: true
     container_name: nginx
-    build:
+    image: nginx
+    build: 
       context: ./requirements/nginx
-    networks:
-      - inception
+      dockerfile: Dockerfile
+      args:
+        DOMAIN_NAME: ${DOMAIN_NAME}
+        CERTS_CRT: ${CERTS_CRT}
+        CERTS_KEY: ${CERTS_KEY}
+    restart: always
     ports:
       - 443:443
-    env_file:
-      - .env
     volumes:
-      - wordpress: /var/www/html
+      - wordpress-volume:/var/www/html
     depends_on:
       - wordpress
+    networks:
+      - inception
+  wordpress:
+    container_name: wordpress
+    image: wordpress
+    build: 
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+      args:
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        WP_HOST: ${WP_HOST}
+    restart: always
+    volumes:
+      - wordpress-volume:/var/www/html
+    env_file:
+      - .env
+    networks:
+      - inception
+    depends_on:
+      - mariadb
 
 networks:
   inception:
     name: inception
-    drive: bridge
 
 volumes:
-  mariadb:
+  mariadb-volume:
+    name: mariadb-volume
+    driver: local
     driver_opts:
+      type: volume
+      device: /home/aminoru-/data/mariadb
       o: bind
-      type: none
-      device: /home/aminoru/data/mariadb
-  wordpress:
+  wordpress-volume:
+    name: wordpress-volume
+    driver: local
     driver_opts:
+      type: volume
+      device: /home/aminoru-/data/wordpress
       o: bind
-      type: none
-      device: /home/aminoru/data/wordpress
